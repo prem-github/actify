@@ -1,0 +1,17 @@
+.dart_tool/
+.idea/
+.metadata
+.packages
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub/
+.pub-cache/
+build/
+coverage/
+android/.gradle/
+android/local.properties
+android/app/google-services.json
+ios/Flutter/Flutter.podspec
+ios/Flutter/Generated.xcconfig
+ios/Flutter/flutter_export_environment.sh
+
