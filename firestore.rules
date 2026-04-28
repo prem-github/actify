@@ -1,0 +1,29 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isCurrentUser(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    match /users/{userId} {
+      allow create: if isCurrentUser(userId)
+        && request.resource.data.userId == request.auth.uid
+        && request.resource.data.name is string
+        && request.resource.data.name.size() > 0
+        && request.resource.data.role in ['trainer', 'client']
+        && (
+          request.resource.data.role == 'trainer' ||
+          !('trainerId' in request.resource.data) ||
+          request.resource.data.trainerId is string
+        );
+
+      allow read, update: if isCurrentUser(userId);
+      allow delete: if false;
+    }
+  }
+}
