@@ -5,22 +5,28 @@ import '../../../auth/presentation/providers/auth_providers.dart';
 import '../../../../shared/widgets/app_section_card.dart';
 
 class HomeScreen extends ConsumerWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({
+    required this.title,
+    super.key,
+  });
+
+  final String title;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authStateChangesProvider).valueOrNull;
-    final authAction = ref.watch(authControllerProvider);
+    final profile = ref.watch(userProfileProvider).valueOrNull;
+    final authAction = ref.watch(profileSetupControllerProvider);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Actify'),
+        title: Text(title),
         actions: [
           IconButton(
             tooltip: 'Sign out',
             onPressed: authAction.isLoading
                 ? null
-                : () => ref.read(authControllerProvider.notifier).signOut(),
+                : () => ref.read(profileSetupControllerProvider.notifier).signOut(),
             icon: const Icon(Icons.logout),
           ),
         ],
@@ -30,7 +36,7 @@ class HomeScreen extends ConsumerWidget {
         child: ListView(
           children: [
             Text(
-              'Home',
+              title,
               style: Theme.of(context).textTheme.headlineMedium,
             ),
             const SizedBox(height: 16),
@@ -41,15 +47,23 @@ class HomeScreen extends ConsumerWidget {
                 children: [
                   Text('Signed in UID: ${user?.uid ?? 'Unknown'}'),
                   const SizedBox(height: 8),
-                  Text('Anonymous session: ${user?.isAnonymous ?? false}'),
+                  Text('Name: ${profile?.name ?? 'Pending'}'),
+                  const SizedBox(height: 8),
+                  Text('Role: ${profile?.role.value ?? 'Pending'}'),
+                  if ((profile?.trainerId ?? '').isNotEmpty) ...[
+                    const SizedBox(height: 8),
+                    Text('Trainer ID: ${profile?.trainerId}'),
+                  ],
                 ],
               ),
             ),
             const SizedBox(height: 16),
-            const AppSectionCard(
-              title: 'Platform Services',
+            AppSectionCard(
+              title: 'Next Steps',
               child: Text(
-                'Firebase Auth, Firestore, and Storage services are registered and ready for feature work.',
+                profile?.isTrainer == true
+                    ? 'Trainer view ready. Next we can add client management, workout plans, and progress tracking.'
+                    : 'Client view ready. Next we can add trainer linking, workout assignments, and progress check-ins.',
               ),
             ),
           ],

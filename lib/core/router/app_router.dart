@@ -3,8 +3,10 @@ import 'package:go_router/go_router.dart';
 
 import '../../features/auth/presentation/providers/auth_providers.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
+import '../../features/auth/presentation/screens/role_selection_screen.dart';
 import '../../features/auth/presentation/screens/splash_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
+import '../../features/auth/domain/models/user_role.dart';
 import 'app_routes.dart';
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -23,16 +25,26 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const LoginScreen(),
       ),
       GoRoute(
-        path: AppRoutes.home,
-        builder: (context, state) => const HomeScreen(),
+        path: AppRoutes.roleSelection,
+        builder: (context, state) => const RoleSelectionScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.trainerHome,
+        builder: (context, state) => const HomeScreen(title: 'Trainer Home'),
+      ),
+      GoRoute(
+        path: AppRoutes.clientHome,
+        builder: (context, state) => const HomeScreen(title: 'Client Home'),
       ),
     ],
     redirect: (context, state) {
       final isLoading = refreshNotifier.isLoading;
       final isAuthenticated = refreshNotifier.currentUser != null;
+      final isProfileLoading = refreshNotifier.isProfileLoading;
+      final profile = refreshNotifier.currentProfile;
       final location = state.matchedLocation;
 
-      if (isLoading) {
+      if (isLoading || (isAuthenticated && isProfileLoading)) {
         return location == AppRoutes.splash ? null : AppRoutes.splash;
       }
 
@@ -40,12 +52,33 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         return location == AppRoutes.login ? null : AppRoutes.login;
       }
 
-      if (location == AppRoutes.splash || location == AppRoutes.login) {
-        return AppRoutes.home;
+      if (profile == null) {
+        return location == AppRoutes.roleSelection
+            ? null
+            : AppRoutes.roleSelection;
+      }
+
+      final roleHome = profile.role == UserRole.trainer
+          ? AppRoutes.trainerHome
+          : AppRoutes.clientHome;
+
+      if (location == AppRoutes.splash ||
+          location == AppRoutes.login ||
+          location == AppRoutes.roleSelection) {
+        return roleHome;
+      }
+
+      if (profile.role == UserRole.trainer &&
+          location == AppRoutes.clientHome) {
+        return AppRoutes.trainerHome;
+      }
+
+      if (profile.role == UserRole.client &&
+          location == AppRoutes.trainerHome) {
+        return AppRoutes.clientHome;
       }
 
       return null;
     },
   );
 });
-
